@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,30 +23,27 @@ public class CpuUsageController {
 	@Autowired
     private CpuUsageService cpuUsageService;
 
-	// CPU 사용률 수집 (분 단위)
+	// CPU 사용률 수집 (1분 단위)
 	@PostMapping
-    public ResponseEntity<Void> saveCpuUsage(@RequestBody CpuUsage cpuUsage) {
-//        cpuUsageService.saveCpuUsage(cpuUsage);
+    public ResponseEntity<Void> saveCpuUsage() {
+        cpuUsageService.collectAndSaveCpuUsage();
         return ResponseEntity.ok().build();
     }
 	
-	// 분 단위 조회: 지정한 시간 구간의 분 단위 CPU 사용률을 조회합니다.
-	// 분 단위 API : 최근 1주 데이터 제공
-    @GetMapping("/minutes")
-    public ResponseEntity<List<CpuUsage>> getCpuUsageByMinutes(@RequestParam LocalDateTime start, @RequestParam LocalDateTime end) {
-    	
-    	
-//    	List<CpuUsage> cpuUsages = cpuUsageService.getCpuUsageByMinutes(start, end);
-//    	return ResponseEntity.ok(cpuUsages);
-    	return null;
+	// CPU 사용률 분 단위 조회 : 지정한 시간 구간의 분 단위 CPU 사용률을 조회합니다.
+	// 최근 1주 데이터 제공
+    @GetMapping("/minute")
+    public ResponseEntity<List<CpuUsage>> getCpuUsageByMinutes(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")LocalDateTime start, @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")LocalDateTime end) {
+    	List<CpuUsage> cpuUsages = cpuUsageService.getCpuUsagePerMinute(start, end);
+    	return ResponseEntity.ok(cpuUsages);
     }
 
     // 시 단위 조회: 지정한 날짜의 시  단위 CPU 최소/최대/평균 사용률을 조회합니다.
-    // 시 단위 API : 최근 3달 데이터 제공
-//    @GetMapping("/hours")
+    // 최근 3달 데이터 제공
+//    @GetMapping("/hour")
 
     // 일 단위 조회: 지정한 날짜 구간의 일  단위 CPU 최소/최대/평균 사용률을 조회합니다.
-    // 일 단위 API : 최근 1년 데이터 제공
-//    @GetMapping("/days")
+    // 최근 1년 데이터 제공
+//    @GetMapping("/day")
 	
 }
