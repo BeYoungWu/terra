@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import com.monitoring.dto.CpuUsageAnalysis;
 import com.monitoring.entity.CpuUsage;
 import com.monitoring.exception.DataCollectionException;
+import com.monitoring.exception.InvalidParameterException;
 import com.monitoring.repository.CpuUsageRepository;
 
 @Service
@@ -48,7 +49,7 @@ public class CpuUsageService {
 	                }
 	            }
 	        }
-		} catch (Exception e) {
+		} catch (Exception e) { // CPU 사용률 데이터 수집 예외처리
 			logger.error("Failed to collect and save CPU usage data", e);
             throw new DataCollectionException("Failed to collect and save CPU usage data", e);
 		}
@@ -56,6 +57,14 @@ public class CpuUsageService {
 
 	// CPU 사용률 분 단위 조회 (최근 1주 데이터 제공)
 	public List<CpuUsage> getCpuUsagePerMinute(LocalDateTime start, LocalDateTime end) {
+		// 파라미터 예외처리
+		if (start == null || end == null) {
+            throw new InvalidParameterException("One or more required parameters are null");
+        }
+        if (start.isAfter(end)) {
+            throw new InvalidParameterException("startDay must be before endDay");
+        }
+		
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime weekAgo = now.minus(1, ChronoUnit.WEEKS);
 		return cpuUsageRepository.getCpuUsagePerMinute(start, end, weekAgo);
@@ -63,6 +72,11 @@ public class CpuUsageService {
 
 	// CPU 사용률 시 단위 최소/최대/평균 조회 (최근 3달 데이터 제공)
 	public List<CpuUsageAnalysis> getCpuUsagePerHour(String day) {
+		// 파라미터 예외처리
+		if (day == null) {
+            throw new InvalidParameterException("Required parameters are null");
+        }
+        
 		LocalDate localDate = LocalDate.parse(day);
 		LocalDateTime dayStart = localDate.atStartOfDay();
     	LocalDateTime dayEnd = localDate.atTime(LocalTime.MAX);
@@ -87,11 +101,20 @@ public class CpuUsageService {
 
 	// CPU 사용률 일 단위 최소/최대/평균 조회 (최근 1년 데이터 제공)
 	public List<CpuUsageAnalysis> getCpuUsagePerDay(String start, String end) {
+		// 파라미터 예외처리
+		if (start == null || end == null) {
+            throw new InvalidParameterException("One or more required parameters are null");
+        }
+        
 		LocalDate startLocalDate = LocalDate.parse(start);
 		LocalDateTime startDay = startLocalDate.atStartOfDay();
 		
 		LocalDate endLocalDate = LocalDate.parse(end);
     	LocalDateTime endDay = endLocalDate.atTime(LocalTime.MAX);
+    	
+    	if (startLocalDate.isAfter(endLocalDate)) {
+            throw new InvalidParameterException("startDay must be before endDay");
+        }
     	
     	LocalDateTime now = LocalDateTime.now();
 		LocalDateTime yearAgo = now.minus(1, ChronoUnit.YEARS);
