@@ -13,4 +13,17 @@ public class CpuUsageAnalysis {
 	private double maxUsage;
 	private double avgUsage; 
 	
+	public CpuUsageAnalysis() {
+    }
+	
+	public CpuUsageAnalysis(int year, int month, int day, int hour, double minUsage, double maxUsage, double avgUsage) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.hour = hour;
+        this.minUsage = minUsage;
+        this.maxUsage = maxUsage;
+        this.avgUsage = avgUsage;
+    }
+	
 }

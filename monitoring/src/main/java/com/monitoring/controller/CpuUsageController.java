@@ -25,7 +25,7 @@ public class CpuUsageController {
 
 	// CPU 사용률 수집 (1분 단위)
 	@PostMapping
-    public ResponseEntity<Void> saveCpuUsage() {
+    public ResponseEntity<Void> collectAndSaveCpuUsage() {
         cpuUsageService.collectAndSaveCpuUsage();
         return ResponseEntity.ok().build();
     }
@@ -38,7 +38,7 @@ public class CpuUsageController {
     	return ResponseEntity.ok(cpuUsages);
     }
 
-    // 시 단위 조회: 지정한 날짜의 시  단위 CPU 최소/최대/평균 사용률을 조회합니다.
+    // CPU 사용률 시 단위 조회: 지정한 날짜의 시  단위 CPU 최소/최대/평균 사용률을 조회합니다.
     // 최근 3달 데이터 제공
     @GetMapping("/hour")
     public ResponseEntity<List<CpuUsageAnalysis>> getCpuUsagePerHour(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd")String day) {
@@ -46,7 +46,7 @@ public class CpuUsageController {
     	return ResponseEntity.ok(list);
     }
 
-    // 일 단위 조회: 지정한 날짜 구간의 일  단위 CPU 최소/최대/평균 사용률을 조회합니다.
+    // CPU 사용률 일 단위 조회: 지정한 날짜 구간의 일  단위 CPU 최소/최대/평균 사용률을 조회합니다.
     // 최근 1년 데이터 제공
     @GetMapping("/day")
     public ResponseEntity<List<CpuUsageAnalysis>> getCpuUsagePerDay(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd")String start, @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd")String end) {
