@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -15,11 +17,14 @@ import org.springframework.web.client.RestTemplate;
 
 import com.monitoring.dto.CpuUsageAnalysis;
 import com.monitoring.entity.CpuUsage;
+import com.monitoring.exception.DataCollectionException;
 import com.monitoring.repository.CpuUsageRepository;
 
 @Service
 public class CpuUsageService {
 
+	private static final Logger logger = LoggerFactory.getLogger(CpuUsageService.class);
+	
 	@Autowired
 	private CpuUsageRepository cpuUsageRepository;
 	
@@ -30,18 +35,23 @@ public class CpuUsageService {
 	@Scheduled(fixedRate = 60000) // 매 분마다 실행
 	public void collectAndSaveCpuUsage() {
 		String url = "http://127.0.0.1:8080/actuator/metrics/system.cpu.usage";
-		Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+		try {
+			Map<String, Object> response = restTemplate.getForObject(url, Map.class);
 
-        if (response != null && response.containsKey("measurements")) {
-            List<Map<String, Object>> measurements = (List<Map<String, Object>>) response.get("measurements");
-            if (!measurements.isEmpty()) {
-                double cpuUsageData = (double) measurements.get(0).get("value") * 100;
-                if (cpuUsageData>0 && cpuUsageData<100) { // 서버 실행 직후에는 CPU 사용률이 0이나 100으로 기록되기 때문에 제외
-                	CpuUsage cpuUsage = new CpuUsage(null, LocalDateTime.now(), cpuUsageData);
-                    cpuUsageRepository.save(cpuUsage);
-                }
-            }
-        }
+	        if (response != null && response.containsKey("measurements")) {
+	            List<Map<String, Object>> measurements = (List<Map<String, Object>>) response.get("measurements");
+	            if (!measurements.isEmpty()) {
+	                double cpuUsageData = (double) measurements.get(0).get("value") * 100;
+	                if (cpuUsageData>0 && cpuUsageData<100) { // 서버 실행 직후에는 CPU 사용률이 0이나 100으로 기록되기 때문에 제외
+	                	CpuUsage cpuUsage = new CpuUsage(null, LocalDateTime.now(), cpuUsageData);
+	                    cpuUsageRepository.save(cpuUsage);
+	                }
+	            }
+	        }
+		} catch (Exception e) {
+			logger.error("Failed to collect and save CPU usage data", e);
+            throw new DataCollectionException("Failed to collect and save CPU usage data", e);
+		}
 	}
 
 	// CPU 사용률 분 단위 조회 (최근 1주 데이터 제공)
@@ -78,16 +88,29 @@ public class CpuUsageService {
 	// CPU 사용률 일 단위 최소/최대/평균 조회 (최근 1년 데이터 제공)
 	public List<CpuUsageAnalysis> getCpuUsagePerDay(String start, String end) {
 		LocalDate startLocalDate = LocalDate.parse(start);
-		LocalDateTime startDayStart = startLocalDate.atStartOfDay();
-		LocalDateTime startDayEnd = startLocalDate.atTime(LocalTime.MAX);
+		LocalDateTime startDay = startLocalDate.atStartOfDay();
 		
-		LocalDate endLocalDate = LocalDate.parse(start);
-		LocalDateTime endDayStart = endLocalDate.atStartOfDay();
-    	LocalDateTime endDayEnd = endLocalDate.atTime(LocalTime.MAX);
+		LocalDate endLocalDate = LocalDate.parse(end);
+    	LocalDateTime endDay = endLocalDate.atTime(LocalTime.MAX);
     	
+    	LocalDateTime now = LocalDateTime.now();
+		LocalDateTime yearAgo = now.minus(1, ChronoUnit.YEARS);
     	
+    	// DB에서 가져온 데이터 DTO에 정리
+    	List<Object[]> list = cpuUsageRepository.getCpuUsagePerDay(startDay, endDay, yearAgo);
+    	List<CpuUsageAnalysis> analysisList = new ArrayList<>();
+    	for (Object[] row : list) {
+    		CpuUsageAnalysis analysis = new CpuUsageAnalysis();
+    		analysis.setYear((int) row[0]);
+    		analysis.setMonth((int) row[1]);
+    		analysis.setDay((int) row[2]);
+			analysis.setMinUsage(Double.parseDouble(row[3].toString()));
+			analysis.setMaxUsage(Double.parseDouble(row[4].toString()));
+			analysis.setAvgUsage(Double.parseDouble(row[5].toString()));
+    		analysisList.add(analysis);
+    	}
 		
-		return null;
+		return analysisList;
 	}
 
 }
