@@ -3,6 +3,7 @@ package com.monitoring.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,7 @@ public class CpuUsageService {
 	@Autowired
     private RestTemplate restTemplate;
 
-	// CPU 사용률 수집 (1분 단위)
+	// CPU 사용률 수집 및 저장 (1분 단위)
 	@Scheduled(fixedRate = 60000) // 매 분마다 실행
 	public void collectAndSaveCpuUsage() {
 		String url = "http://127.0.0.1:8080/actuator/metrics/system.cpu.usage";
@@ -49,9 +50,9 @@ public class CpuUsageService {
 	                }
 	            }
 	        }
-		} catch (Exception e) { // CPU 사용률 데이터 수집 예외처리
-			logger.error("Failed to collect and save CPU usage data", e);
-            throw new DataCollectionException("Failed to collect and save CPU usage data", e);
+		} catch (Exception e) { // CPU 사용률 데이터 수집 및 저장 예외처리
+			logger.error("CPU 사용률 데이터 수집 및 저장에 실패했습니다.", e);
+            throw new DataCollectionException("CPU 사용률 데이터 수집 및 저장에 실패했습니다.", e);
 		}
 	}
 
@@ -59,10 +60,10 @@ public class CpuUsageService {
 	public List<CpuUsage> getCpuUsagePerMinute(LocalDateTime start, LocalDateTime end) {
 		// 파라미터 예외처리
 		if (start == null || end == null) {
-            throw new InvalidParameterException("One or more required parameters are null");
+            throw new InvalidParameterException("요구되는 파라미터가 null 값입니다.");
         }
         if (start.isAfter(end)) {
-            throw new InvalidParameterException("startDay must be before endDay");
+            throw new InvalidParameterException("시작 날짜가 종료 날짜보다 이후의 날짜입니다.");
         }
 		
 		LocalDateTime now = LocalDateTime.now();
@@ -74,7 +75,14 @@ public class CpuUsageService {
 	public List<CpuUsageAnalysis> getCpuUsagePerHour(String day) {
 		// 파라미터 예외처리
 		if (day == null) {
-            throw new InvalidParameterException("Required parameters are null");
+            throw new InvalidParameterException("요구되는 파라미터가 null 값입니다.");
+        }
+		
+		// 파라미터 날짜 형식 에외처리
+        try {
+            LocalDate.parse(day);
+        } catch (DateTimeParseException e) {
+            throw new InvalidParameterException("날짜 포맷이 잘못된 값입니다.");
         }
         
 		LocalDate localDate = LocalDate.parse(day);
@@ -101,11 +109,19 @@ public class CpuUsageService {
 
 	// CPU 사용률 일 단위 최소/최대/평균 조회 (최근 1년 데이터 제공)
 	public List<CpuUsageAnalysis> getCpuUsagePerDay(String start, String end) {
-		// 파라미터 예외처리
+		// 파라미터 null 예외처리
 		if (start == null || end == null) {
-            throw new InvalidParameterException("One or more required parameters are null");
+            throw new InvalidParameterException("요구되는 파라미터가 null 값입니다.");
         }
         
+		// 파라미터 날짜 형식 에외처리
+        try {
+            LocalDate.parse(start);
+            LocalDate.parse(end);
+        } catch (DateTimeParseException e) {
+            throw new InvalidParameterException("날짜 포맷이 잘못된 값입니다.");
+        }
+		
 		LocalDate startLocalDate = LocalDate.parse(start);
 		LocalDateTime startDay = startLocalDate.atStartOfDay();
 		
@@ -113,7 +129,7 @@ public class CpuUsageService {
     	LocalDateTime endDay = endLocalDate.atTime(LocalTime.MAX);
     	
     	if (startLocalDate.isAfter(endLocalDate)) {
-            throw new InvalidParameterException("startDay must be before endDay");
+            throw new InvalidParameterException("시작 날짜가 종료 날짜보다 이후의 날짜입니다.");
         }
     	
     	LocalDateTime now = LocalDateTime.now();

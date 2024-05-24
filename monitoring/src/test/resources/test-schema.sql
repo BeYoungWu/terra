@@ -1,5 +1,0 @@
-CREATE TABLE tbl_usage (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    useTime TIMESTAMP,
-    cpuUsage DOUBLE
-);

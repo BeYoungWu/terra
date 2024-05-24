@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class CpuUsageControllerTest {
 	private CpuUsageService cpuUsageService;
 	
 	@Test
-    @DisplayName("POST CPU 사용률 수집 컨트롤러 로직 확인")
+    @DisplayName("POST CPU 사용률 수집 및 저장 - 컨트롤러 로직 확인")
     public void postCollectAndSaveCpuUsageTest() throws Exception {
         // Given
         Mockito.doNothing().when(cpuUsageService).collectAndSaveCpuUsage();
@@ -42,7 +43,7 @@ public class CpuUsageControllerTest {
     }
 
     @Test
-    @DisplayName("GET CPU 사용률 분 단위 조회 컨트롤러 로직 확인")
+    @DisplayName("GET CPU 사용률 분 단위 조회 - 컨트롤러 로직 확인")
     public void getCpuUsagePerMinuteTest() throws Exception {
         // Given
         LocalDateTime start = LocalDateTime.of(2024, 5, 24, 0, 0, 0);
@@ -56,8 +57,8 @@ public class CpuUsageControllerTest {
 
         // When / Then
         mockMvc.perform(get("/api/cpu-usage/minute")
-                .param("start", start.toString())
-                .param("end", end.toString()))
+                .param("start", start.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                .param("end", end.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1))
@@ -69,7 +70,7 @@ public class CpuUsageControllerTest {
     }
 
     @Test
-    @DisplayName("GET CPU 사용률 시 단위 조회 컨트롤러 로직 확인")
+    @DisplayName("GET CPU 사용률 시 단위 최소/최대/평균 조회 - 컨트롤러 로직 확인")
     public void getCpuUsagePerHourTest() throws Exception {
         // Given
         String day = "2024-05-24";
@@ -96,7 +97,7 @@ public class CpuUsageControllerTest {
     }
 
     @Test
-    @DisplayName("GET CPU 사용률 일 단위 조회 컨트롤러 로직 확인")
+    @DisplayName("GET CPU 사용률 일 단위 최소/최대/평균 조회 - 컨트롤러 로직 확인")
     public void getCpuUsagePerDayTest() throws Exception {
         // Given
         String start = "2024-05-01";

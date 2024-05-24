@@ -14,10 +14,11 @@ import com.monitoring.entity.CpuUsage;
 @Repository
 public interface CpuUsageRepository extends JpaRepository<CpuUsage, Long> {
 
-	// CPU 사용률 분 단위 조회 (최근 1주 데이터 제공) 
+	// CPU 사용률 분 단위 조회 (최근 1주 데이터 제공)
 	@Query("SELECT u FROM tbl_usage u "+
 			"WHERE u.useTime BETWEEN :start AND :end AND u.useTime >= :weekAgo ORDER BY u.useTime")
 	List<CpuUsage> getCpuUsagePerMinute(@Param("start")LocalDateTime start, @Param("end")LocalDateTime end, @Param("weekAgo")LocalDateTime weekAgo);
+	
 
 	// CPU 사용률 시 단위 최소/최대/평균 조회 (최근 3달 데이터 제공)
 	@Query("SELECT HOUR(u.useTime) as hour, "+

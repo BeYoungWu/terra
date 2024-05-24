@@ -1,146 +1,140 @@
 package com.monitoring.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import javax.transaction.Transactional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.jdbc.Sql;
 
 import com.monitoring.entity.CpuUsage;
-import com.monitoring.exception.InvalidParameterException;
 
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = Replace.NONE)
 @Transactional
 public class CpuUsageRepositoryTest {
 	
 	@Autowired
     private CpuUsageRepository cpuUsageRepository;
+	
+	private static CpuUsage cpuUsage1;
+	private static CpuUsage cpuUsage2;
+	private static CpuUsage cpuUsage3;
+	private static CpuUsage cpuUsage4;
+	private static CpuUsage cpuUsage5;
 
     @BeforeEach
-    @Sql({"/test-schema.sql", "/test-data.sql"})
     public void setUp() {
-        // 각 테스트 전에 test-data.sql 파일의 내용을 데이터베이스에 로드
-    }
-
-    @Test
-    @DisplayName("GET CpuUsagePerMinute - 정상 케이스")
-    public void getCpuUsagePerMinuteTest() {
-        // Given
-        LocalDateTime start = LocalDateTime.now().minusDays(1);
-        LocalDateTime end = LocalDateTime.now();
-        LocalDateTime weekAgo = LocalDateTime.now().minusWeeks(1);
-
-        // When
-        List<CpuUsage> result = cpuUsageRepository.getCpuUsagePerMinute(start, end, weekAgo);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(3, result.size()); // test-data.sql에 해당 시간 범위 내에 3개의 엔트리가 있다고 가정
-    }
-
-    @Test
-    @DisplayName("GET CpuUsagePerMinute - 예외 케이스 : 파라미터가 null일 때")
-    public void getCpuUsagePerMinute_NullParameterTest() {
-    	LocalDateTime start = LocalDateTime.now().minusDays(1);
-    	LocalDateTime end = LocalDateTime.now();
-        LocalDateTime weekAgo = LocalDateTime.now().minusWeeks(1);
-
-        // start가 null일 때
-        assertThrows(InvalidParameterException.class, () -> {
-            cpuUsageRepository.getCpuUsagePerMinute(null, end, weekAgo);
-        });
-
-        // end가 null일 때
-        assertThrows(InvalidParameterException.class, () -> {
-            cpuUsageRepository.getCpuUsagePerMinute(start, null, weekAgo);
-        });
+    	System.err.println("=============================== setup ==============================");
+    	cpuUsage1 = CpuUsage.builder()
+    				.id((long) 1)
+    				.cpuUsage(30.0)
+    				.useTime(LocalDateTime.of(2024, 5, 22, 12, 0, 0))
+    				.build();
+    	cpuUsage2 = CpuUsage.builder()
+				.id((long) 2)
+				.cpuUsage(50.1)
+				.useTime(LocalDateTime.of(2024, 5, 23, 12, 0, 0))
+				.build();
+    	cpuUsage3 = CpuUsage.builder()
+				.id((long) 3)
+				.cpuUsage(11.1)
+				.useTime(LocalDateTime.of(2024, 5, 23, 12, 1, 0))
+				.build();
+    	cpuUsage4 = CpuUsage.builder()
+				.id((long) 4)
+				.cpuUsage(45.4)
+				.useTime(LocalDateTime.of(2024, 5, 24, 12, 0, 0))
+				.build();
+    	cpuUsage5 = CpuUsage.builder()
+				.id((long) 5)
+				.cpuUsage(70.7)
+				.useTime(LocalDateTime.of(2024, 5, 24, 13, 0, 0))
+				.build();
     }
     
     @Test
-    @DisplayName("GET CpuUsagePerHour - 정상 케이스")
-    public void getCpuUsagePerHourTest() {
-        // Given
-        LocalDateTime dayStart = LocalDateTime.now().minusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime dayEnd = LocalDateTime.now().minusDays(1).withHour(23).withMinute(59).withSecond(59).withNano(999);
-        LocalDateTime monthsAgo = LocalDateTime.now().minusMonths(3);
+    @DisplayName("CPU 사용률 분 단위 조회 (최근 1주 데이터 제공)")
+    @Transactional
+    @Order(1)
+    public void getCpuUsagePerMinuteTest(){
 
-        // When
-        List<Object[]> result = cpuUsageRepository.getCpuUsagePerHour(dayStart, dayEnd, monthsAgo);
+        // given
+        cpuUsageRepository.save(cpuUsage1);
+        cpuUsageRepository.save(cpuUsage2);
+        cpuUsageRepository.save(cpuUsage3);
+        cpuUsageRepository.save(cpuUsage4);
+        cpuUsageRepository.save(cpuUsage5);
 
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size()); // test-data.sql에 해당 시간 범위 내에 2개의 서로 다른 시간이 있다고 가정
-        assertEquals(0, result.get(0)[0]);
-        assertEquals(10.0, (Double) result.get(0)[1]);
-        assertEquals(80.0, (Double) result.get(0)[2]);
-        assertEquals(45.0, (Double) result.get(0)[3]);
-    }
-
-    @Test
-    @DisplayName("getCpuUsagePerHour - 예외 케이스 : 파라미터가 null일 때")
-    public void getCpuUsagePerHour_NullParameterTest() {
-    	LocalDateTime dayStart = LocalDateTime.now().minusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-    	LocalDateTime dayEnd = LocalDateTime.now().minusDays(1).withHour(23).withMinute(59).withSecond(59).withNano(999);
-        LocalDateTime monthsAgo = LocalDateTime.now().minusMonths(3);
-
-        // dayStart가 null일 때
-        assertThrows(InvalidParameterException.class, () -> {
-            cpuUsageRepository.getCpuUsagePerHour(null, dayEnd, monthsAgo);
-        });
-
-        // dayEnd가 null일 때
-        assertThrows(InvalidParameterException.class, () -> {
-            cpuUsageRepository.getCpuUsagePerHour(dayStart, null, monthsAgo);
-        });
+        // when
+        LocalDateTime start = LocalDateTime.of(2024, 5, 23, 12, 0, 0);
+        LocalDateTime end = LocalDateTime.of(2024, 5, 23, 12, 1, 0);
+        LocalDateTime weekAgo = LocalDateTime.now().minus(1, ChronoUnit.WEEKS);
+    	List<CpuUsage> list = cpuUsageRepository.getCpuUsagePerMinute(start, end, weekAgo);
+    	
+        // then
+    	assertThat(list).isNotEmpty();
+    	assertThat(list.size()).isEqualTo(2);
+    	
     }
     
     @Test
-    @DisplayName("GET CpuUsagePerDay - 정상 케이스")
-    public void getCpuUsagePerDayTest() {
-        // Given
-        LocalDateTime startDay = LocalDateTime.now().minusDays(5).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime endDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999);
-        LocalDateTime yearAgo = LocalDateTime.now().minusYears(1);
+    @DisplayName("CPU 사용률 시 단위 최소/최대/평균 조회 (최근 3달 데이터 제공)")
+    @Transactional
+    @Order(2)
+    public void getCpuUsagePerHourTest(){
 
-        // When
-        List<Object[]> result = cpuUsageRepository.getCpuUsagePerDay(startDay, endDay, yearAgo);
+        // given
+        cpuUsageRepository.save(cpuUsage1);
+        cpuUsageRepository.save(cpuUsage2);
+        cpuUsageRepository.save(cpuUsage3);
+        cpuUsageRepository.save(cpuUsage4);
+        cpuUsageRepository.save(cpuUsage5);
 
-        // Then
-        assertNotNull(result);
-        assertEquals(5, result.size()); // Assuming test-data.sql contains 5 distinct days within the given time range
-        assertEquals(2024, result.get(0)[0]); // First entry year
-        assertEquals(5, result.get(0)[1]); // First entry month
-        assertEquals(1, result.get(0)[2]); // First entry day
-        assertEquals(10.0, (Double) result.get(0)[3]); // First entry minUsage
-        assertEquals(80.0, (Double) result.get(0)[4]); // First entry maxUsage
-        assertEquals(45.0, (Double) result.get(0)[5]); // First entry avgUsage
+        // when
+        LocalDateTime dayStart = LocalDateTime.of(2024, 5, 24, 0, 0, 0);
+        LocalDateTime dayEnd = LocalDateTime.of(2024, 5, 24, 23, 59, 59);
+        LocalDateTime monthsAgo = LocalDateTime.now().minus(3, ChronoUnit.MONTHS);
+    	List<Object[]> list = cpuUsageRepository.getCpuUsagePerHour(dayStart, dayEnd, monthsAgo);
+    	
+        // then
+    	assertThat(list).isNotEmpty();
+    	assertThat(list.size()).isEqualTo(2);
+    	
     }
-    
+
     @Test
-    @DisplayName("getCpuUsagePerDay - 예외 케이스 : 파라미터가 null일 때")
-    public void getCpuUsagePerDay_NullParameterTest() {
-    	LocalDateTime startDay = LocalDateTime.now().minusDays(5).withHour(0).withMinute(0).withSecond(0).withNano(0);
-    	LocalDateTime endDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999);
-        LocalDateTime yearAgo = LocalDateTime.now().minusYears(1);
+    @DisplayName("CPU 사용률 일 단위 최소/최대/평균 조회 (최근 1년 데이터 제공)")
+    @Transactional
+    @Order(3)
+    public void getCpuUsagePerDayTest(){
 
-        // startDay가 null일 때
-        assertThrows(InvalidParameterException.class, () -> {
-            cpuUsageRepository.getCpuUsagePerDay(null, endDay, yearAgo);
-        });
+        // given
+        cpuUsageRepository.save(cpuUsage1);
+        cpuUsageRepository.save(cpuUsage2);
+        cpuUsageRepository.save(cpuUsage3);
+        cpuUsageRepository.save(cpuUsage4);
+        cpuUsageRepository.save(cpuUsage5);
 
-        // endDay가 null일 때
-        assertThrows(InvalidParameterException.class, () -> {
-            cpuUsageRepository.getCpuUsagePerDay(startDay, null, yearAgo);
-        });
+        // when
+        LocalDateTime startDay = LocalDateTime.of(2024, 5, 22, 0, 0, 0);
+        LocalDateTime endDay = LocalDateTime.of(2024, 5, 24, 23, 59, 59);
+        LocalDateTime yearAgo = LocalDateTime.now().minus(1, ChronoUnit.YEARS);
+    	List<Object[]> list = cpuUsageRepository.getCpuUsagePerDay(startDay, endDay, yearAgo);
+    	
+        // then
+    	assertThat(list).isNotEmpty();
+    	assertThat(list.size()).isEqualTo(3);
+    	
     }
 }

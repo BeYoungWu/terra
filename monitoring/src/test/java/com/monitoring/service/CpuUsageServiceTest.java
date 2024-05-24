@@ -6,9 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +45,7 @@ public class CpuUsageServiceTest {
     }
 
     @Test
-    @DisplayName("POST CollectAndSaveCpuUsage - 정상 케이스")
+    @DisplayName("POST CPU 사용률 수집 및 저장 - 정상 케이스")
     public void collectAndSaveCpuUsageTest() {
         // Given
         String url = "http://127.0.0.1:8080/actuator/metrics/system.cpu.usage";
@@ -65,7 +63,7 @@ public class CpuUsageServiceTest {
     }
 
     @Test
-    @DisplayName("POST CollectAndSaveCpuUsage - 예외 케이스 : 데이터 수집 실패")
+    @DisplayName("POST CPU 사용률 수집 및 저장 - 예외 케이스 : 데이터 수집 실패")
     public void collectAndSaveCpuUsageExceptionTest() {
         // Given
         String url = "http://127.0.0.1:8080/actuator/metrics/system.cpu.usage";
@@ -77,7 +75,7 @@ public class CpuUsageServiceTest {
     }
 
     @Test
-    @DisplayName("GET CpuUsagePerMinute - 정상 케이스")
+    @DisplayName("GET CPU 사용률 분 단위 조회 - 정상 케이스")
     public void getCpuUsagePerMinuteTest() {
         // Given
         LocalDateTime start = LocalDateTime.now().minusHours(1);
@@ -96,7 +94,7 @@ public class CpuUsageServiceTest {
     }
 
     @Test
-    @DisplayName("GET CpuUsagePerMinute - 예외 케이스 : 파라미터가 null일 때")
+    @DisplayName("GET CPU 사용률 분 단위 조회 - 예외 케이스 : 파라미터가 null일 때")
     public void getCpuUsagePerMinuteNullParameterTest() {
         // When & Then
         assertThrows(InvalidParameterException.class, () -> cpuUsageService.getCpuUsagePerMinute(null, LocalDateTime.now()));
@@ -104,7 +102,7 @@ public class CpuUsageServiceTest {
     }
 
     @Test
-    @DisplayName("GET CpuUsagePerMinute - 예외 케이스 : start가 end보다 이후일 때")
+    @DisplayName("GET CPU 사용률 분 단위 조회 - 예외 케이스 : start가 end보다 이후일 때")
     public void getCpuUsagePerMinuteStartAfterEndTest() {
         // Given
         LocalDateTime start = LocalDateTime.now();
@@ -115,19 +113,16 @@ public class CpuUsageServiceTest {
     }
 
     @Test
-    @DisplayName("GET CpuUsagePerHour - 정상 케이스")
+    @DisplayName("GET CPU 사용률 시 단위 최소/최대/평균 조회 - 정상 케이스")
     public void getCpuUsagePerHourTest() {
         // Given
         String day = "2024-05-24";
-        LocalDate localDate = LocalDate.parse(day);
-        LocalDateTime dayStart = localDate.atStartOfDay();
-        LocalDateTime dayEnd = localDate.atTime(LocalTime.MAX);
         List<Object[]> list = new ArrayList<>();
         list.add(new Object[]{12, 10.0, 80.0, 45.0});
         list.add(new Object[]{13, 15.0, 85.0, 50.0});
 
-        when(cpuUsageRepository.getCpuUsagePerHour(dayStart, dayEnd, LocalDateTime.now().minus(3, ChronoUnit.MONTHS)))
-            .thenReturn(list);
+        when(cpuUsageRepository.getCpuUsagePerHour(any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+        	.thenReturn(list);
 
         // When
         List<CpuUsageAnalysis> result = cpuUsageService.getCpuUsagePerHour(day);
@@ -141,28 +136,24 @@ public class CpuUsageServiceTest {
     }
 
     @Test
-    @DisplayName("GET CpuUsagePerHour - 예외 케이스 : 파라미터가 null일 때")
+    @DisplayName("GET CPU 사용률 시 단위 최소/최대/평균 조회 - 예외 케이스 : 파라미터가 null일 때")
     public void getCpuUsagePerHourNullParameterTest() {
         // When & Then
         assertThrows(InvalidParameterException.class, () -> cpuUsageService.getCpuUsagePerHour(null));
     }
 
     @Test
-    @DisplayName("GET CpuUsagePerDay - 정상 케이스")
+    @DisplayName("GET CPU 사용률 일 단위 최소/최대/평균 조회 - 정상 케이스")
     public void getCpuUsagePerDayTest() {
         // Given
         String start = "2024-05-01";
         String end = "2024-05-24";
-        LocalDate startLocalDate = LocalDate.parse(start);
-        LocalDate endLocalDate = LocalDate.parse(end);
-        LocalDateTime startDay = startLocalDate.atStartOfDay();
-        LocalDateTime endDay = endLocalDate.atTime(LocalTime.MAX);
         List<Object[]> list = new ArrayList<>();
         list.add(new Object[]{2024, 5, 1, 10.0, 80.0, 45.0});
         list.add(new Object[]{2024, 5, 2, 15.0, 85.0, 50.0});
 
-        when(cpuUsageRepository.getCpuUsagePerDay(startDay, endDay, LocalDateTime.now().minus(1, ChronoUnit.YEARS)))
-            .thenReturn(list);
+        when(cpuUsageRepository.getCpuUsagePerDay(any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+        	.thenReturn(list);
 
         // When
         List<CpuUsageAnalysis> result = cpuUsageService.getCpuUsagePerDay(start, end);
@@ -178,7 +169,7 @@ public class CpuUsageServiceTest {
     }
 
     @Test
-    @DisplayName("GET CpuUsagePerDay - 예외 케이스 : 파라미터가 null일 때")
+    @DisplayName("GET CPU 사용률 일 단위 최소/최대/평균 조회 - 예외 케이스 : 파라미터가 null일 때")
     public void getCpuUsagePerDayNullParameterTest() {
         // When & Then
         assertThrows(InvalidParameterException.class, () -> cpuUsageService.getCpuUsagePerDay(null, "2024-05-24"));
@@ -186,7 +177,7 @@ public class CpuUsageServiceTest {
     }
 
     @Test
-    @DisplayName("GET CpuUsagePerDay - 예외 케이스 : start가 end보다 이후일 때")
+    @DisplayName("GET CPU 사용률 일 단위 최소/최대/평균 조회 - 예외 케이스 : start가 end보다 이후일 때")
     public void getCpuUsagePerDayStartAfterEndTest() {
         // Given
         String start = "2024-05-24";

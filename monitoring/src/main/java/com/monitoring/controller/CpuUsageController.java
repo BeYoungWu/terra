@@ -23,7 +23,7 @@ public class CpuUsageController {
 	@Autowired
     private CpuUsageService cpuUsageService;
 
-	// CPU 사용률 수집 (1분 단위)
+	// CPU 사용률 수집 및 저장 (1분 단위)
 	@PostMapping
     public ResponseEntity<Void> collectAndSaveCpuUsage() {
         cpuUsageService.collectAndSaveCpuUsage();
