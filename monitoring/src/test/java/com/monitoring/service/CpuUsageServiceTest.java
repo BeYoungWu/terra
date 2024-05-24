@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestTemplate;
 
 import com.monitoring.dto.CpuUsageAnalysis;
@@ -28,6 +29,7 @@ import com.monitoring.exception.InvalidParameterException;
 import com.monitoring.repository.CpuUsageRepository;
 
 @SpringBootTest
+@ActiveProfiles("test")
 public class CpuUsageServiceTest {
 	
 	@Mock
