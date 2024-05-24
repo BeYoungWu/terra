@@ -27,10 +27,10 @@ public class CpuUsage {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column(name = "timestamp")
-	private LocalDateTime timestamp;
+	@Column(name = "useTime")
+	private LocalDateTime useTime;
 	
-	@Column(name = "usage")
-	private double usage;
+	@Column(name = "cpuUsage")
+	private double cpuUsage;
 	
 }

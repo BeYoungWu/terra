@@ -61,11 +61,11 @@ public class CpuUsageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].timestamp").value("2024-05-24T12:00:00"))
-                .andExpect(jsonPath("$[0].usage").value(30.0))
+                .andExpect(jsonPath("$[0].useTime").value("2024-05-24T12:00:00"))
+                .andExpect(jsonPath("$[0].cpuUsage").value(30.0))
                 .andExpect(jsonPath("$[1].id").value(2))
-                .andExpect(jsonPath("$[1].timestamp").value("2024-05-24T12:01:00"))
-                .andExpect(jsonPath("$[1].usage").value(40.0));
+                .andExpect(jsonPath("$[1].useTime").value("2024-05-24T12:01:00"))
+                .andExpect(jsonPath("$[1].cpuUsage").value(40.0));
     }
 
     @Test
