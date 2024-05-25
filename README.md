@@ -20,24 +20,31 @@
     JPA
 #####
     DB 환경 분리
-    Prod             : Maria DB
-    Local (Dev, Test): H2 DB (In-Memory)
+    Dev, Test : H2 DB (In-Memory)
+    Prod      : Maria DB
 
 #### 2. 프로젝트 실행 방법
-    Maria DB 로컬 환경 접속
-    username : root
-    password : root
-    CREATE DATABASE monitoring;
-#####
     Spring Boot App으로 프로젝트 실행
 #####
+    Swagger로 API 데이터 입출력 확인
     Swagger API 문서 URL : http://localhost:8080/swagger-ui/index.html#/
-#####    
+#####
     H2 DB (In-Memory) Console URL : http://localhost:8080/h2-console/
     username : sa
     password :
 
-#### 3. 프로젝트 테스트 방법
+#### 3. DB 환경  설정
+    Dev, Test 환경 : 기본값
+
+    Prod 환경으로 변경
+        (1) 프로젝트 폴더 위치에서 cmd 실행
+            java -jar .\build\libs\monitoring-0.0.1-SNAPSHOT.jar --spring-profiles-active=prod
+        
+        (2) application.yml 파일에서 spring.profiles.include: prod 로 변경
+
+        -> username, passowrd : root 로 설정된 로컬 세션에 monitoring이라는 Database 임의 생성 필요
+
+#### 4. 프로젝트 테스트 방법
     JUnit Test로 프로젝트 실행
 
 ![image](https://github.com/BeYoungWu/solo/assets/116334811/67daa35e-f128-4d06-901c-9c3231560d5d)

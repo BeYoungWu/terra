@@ -84,6 +84,13 @@ public class CpuUsageServiceTest {
         LocalDateTime end = LocalDateTime.now();
         List<CpuUsage> cpuUsages = new ArrayList<>();
         cpuUsages.add(new CpuUsage(null, LocalDateTime.now(), 50.0));
+        
+        // 자동증가컬럼 null 값으로 넣고 검증까지 대기 시간
+        try {
+            Thread.sleep(100); // 0.1초 대기
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         when(cpuUsageRepository.getCpuUsagePerMinute(start, end, LocalDateTime.now().minus(1, ChronoUnit.WEEKS)))
             .thenReturn(cpuUsages);
