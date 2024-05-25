@@ -95,8 +95,14 @@ public class CpuUsageService {
 		// DB에서 가져온 데이터 DTO에 정리
 		List<Object[]> list = cpuUsageRepository.getCpuUsagePerHour(dayStart, dayEnd, monthsAgo);
 		List<CpuUsageAnalysis> analysisList = new ArrayList<>();
+		int year = localDate.getYear();
+		int month = localDate.getMonthValue();
+		int day2 = localDate.getDayOfMonth();
 		for (Object[] row : list) {
 			CpuUsageAnalysis analysis = new CpuUsageAnalysis();
+			analysis.setYear(year);
+			analysis.setMonth(month);
+			analysis.setDay(day2);
 			analysis.setHour((int) row[0]);
 			analysis.setMinUsage(Double.parseDouble(row[1].toString()));
 			analysis.setMaxUsage(Double.parseDouble(row[2].toString()));
